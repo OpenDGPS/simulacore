@@ -2,6 +2,15 @@
 
 A multicore opcode interpreter and runtime environment in CUDA.
 
+## Run the example
+
+```
+git clone https://github.com/OpenDGPS/simulacore
+cd simulacore/cuda
+nvcc -I <PATH_TO_CUDA_SDK/samples/common/inc -o simulacore simulacore.cu
+./simulacore
+```
+
 ## What for?
 
 Simulacore is a proof-of-concept to answer a simple question: Is a GPU able to interpret the opcode of a CISC-processor and run/interpret/simulate such a program? 
