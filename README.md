@@ -26,6 +26,8 @@ Additionally to the information about the target processing code (ISA) and the o
 
 ## Interpreting the binary from simple.c
 
+![Disassembly of simple.c](/disassembly.png)
+
 The very basic MachO binary compiled from the "simple.c" via gcc (-O0 to prevent any optimizations) to "simple" is our starting point. It starts with the instructions at address 0xf80. First command is a push at register RBP. The opcode is 0x55. Next the RSP will be moved to RBP register. Then the registers RBP, EAX and ECX will be used for the calculation of the target value 42.
 
 It is helpful to know, that the opcodes are byte oriented even if the processor (i86_64) is a little endian CPU. The codes are not stored at 32 or 64 bit memory address in reverse order. Instead the CPU reads the codes byte by byte. So, if there is a unambiguous interpretable instruction for a byte, no further commands will be readed (except to fill the instruction pipeline). 
