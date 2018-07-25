@@ -17,16 +17,15 @@ __device__ unsigned char getNextByte(int *targetMem, int longInt) {
 	return ((targetMem[longInt >> 2] & (0xff << ( 8 * (longInt % 4) ))) >> ( 8 * (longInt % 4) ));
 }
 
-__global__ void simulacore_gpu(int *targetMem) {
+__global__ void simulacore_gpu(int *targetMem, int *resultMem) {
 	int coreNum = 0;
 	int opcAddress = 0;
 	int varAddress = 0;
 	unsigned char command;
-	int value = 0;
 	// fake register
 	long rbp_4, rbp_8, eax, ecx; // rsp not needed
 	coreNum = getGlobalIdx_1D_1D();
-	if (coreNum == 3) {
+	if (coreNum < NUMOFCORES) {
 		opcAddress = 0xf80;
 		for ( int step = 0; step < 16; step++ ) {
 			command = getNextByte(targetMem,opcAddress); opcAddress++;
@@ -67,7 +66,6 @@ __global__ void simulacore_gpu(int *targetMem) {
 					eax = eax + (getNextByte(targetMem,varAddress) << 16); varAddress++;
 					eax = eax + (getNextByte(targetMem,varAddress) << 24); 
 					opcAddress = opcAddress + 4;
-					targetMem[0x1004 >> 2] = eax;
 				}
 				if ( command == 0x0d ) {
 					// mov        ecx, dword [_a] # 8B 0D 5B 00 00 00 
@@ -106,7 +104,7 @@ __global__ void simulacore_gpu(int *targetMem) {
 					command = getNextByte(targetMem,opcAddress); opcAddress++;
 				}
 			}
-			targetMem[0x1004 >> 2] = eax;
+			resultMem[coreNum] = eax;
 		}
 	}
 }
