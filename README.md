@@ -47,9 +47,9 @@ Because of the return value of the main function you need to run the "simple" ex
 
 ### Reading the binary from executable and transfer it to the GPU memory
 
-In simulacore.cu the executable file "simple" is opened and copyed to the memory. To show the content of the instructions and data memory, a hexdump will be printed (starting from line 28 of the C code).
+In simulacore.cu the executable file "simple" is opened and copyed to the memory. Then it is replicated 384 times (to allow each core accessing its own memory without concurrent memory access). To show the content of the instructions and data memory, a hexdump will be printed (starting from line 42 of the C code).
 
-From line 35 on the CUDA part is configured. The minimal number of threads are initialized (384 for the "GeForce GT 650M" on a "MacBook Pro (Retina, Mid 2012)". After this a memory section from the GPU device memory is allocated. Via cudaMemcpy the executable binary is transfered to this device memory. 
+From line 50 on the CUDA part is configured. The minimal number of threads are initialized (384 for the "GeForce GT 650M" on a "MacBook Pro (Retina, Mid 2012)". After this a memory section from the GPU device memory is allocated. Via cudaMemcpy the executable binary is transfered to this device memory. 
 
 ### Run the i86 opcode interpreter kernel on the GPU
 
@@ -61,15 +61,17 @@ If it's successfully execution the memory will be transfered back to the host me
 
 The interpreter itself is located on the simulacore_kernel.cu. The function simulacore_gpu gets a pointer of the device memory.
 
-At this sample only threads with id equal 3 are doing the opcode interpretation. Because the number of threads are identical to the number of cores of the given GPU device, only one thread should be accessing the memory. 
+At this sample the executable binary is copyed as many times as the number of cores available. The result available in the EAX register at the Intel code is stored in a separate memory block at the GPU and transfered to the host memory.
 
 To help to understand the if-conditions, the disassembly (from Hopper Disassembler for OSX) are listed as comments. The order of the if-statements is not the exact order of the opcode in the binary.  
 
-Even if CUDA - and in more general, GPUs - offer registers to it's cores, in this proof-of-concept the i86 registers are defined as variables. The defined C-variables are stored via MOV (0xc7) at the register variable rbp_8 and eax and the calculation happens at eax and ecx. The final result of the calculation can be found at eax. The value of eax will be written to the device memory via "targetMem[0x1004 >> 2] = eax;" at line 109 in file simulacore_kernel.cu.
+Even if CUDA - and in more general, GPUs - offer registers to it's cores, in this proof-of-concept the i86 registers are defined as variables. The defined C-variables are stored via MOV (0xc7) at the register variable rbp_8 and eax and the calculation happens at eax and ecx. The final result of the calculation can be found at eax. The value of eax will be written to the device memory via "resultMem[coreNum] = eax;" at line 107 in file simulacore_kernel.cu.
 
 ## Conclusion
 
 It is shown, that it is possible to interprete and run opcode from an Intel processor with a GPU. In the history of computer this is not the first time. The Digital FX!32 had done this on Digital Alpha Workstations in the 90the. More sophisticated than this PoC the software also made runtime analytics to optimize the performance on the flight (http://www.hpl.hp.com/hpjournal/dtj/vol9num1/vol9num1art1.pdf). 
+
+Additional it is shown, that the same executable opcode can be interpreted on many cores in parallel.
 
 With the ability to run the same code many times in parallel (up to 4000 cores on a NVIDIA 1080ti), this solution could be faster as the target processor even if the opcodes interpreted and a GPU usually runs on lower clock than a typical Intel CPU.
 
@@ -81,7 +83,7 @@ Given the prerequisite, that it is possible to find a valid solution to call sta
 
 ## Next steps
 
-- run the same executable many times 
+~~- run the same executable many times~~
 - run the same C code compiled for different OS in parallel
 - run the same C code compiled for different CPUs and OS in parallel
 - evaluate opcode interpretation of embedded systems like Arduino 
