@@ -45,23 +45,37 @@ In the sample C code there is a global integer variable "a" and a integer variab
 
 Because of the return value of the main function you need to run the "simple" executable via terminal and get the return value by "echo $?". 
 
-### Reading the binary from executable and transfer it to the GPU memory
+### Reading the binaries from executables and transfer it to the GPU memory
 
-In simulacore.cu the executable file "simple" is opened and copyed to the memory. To show the content of the instructions and data memory, a hexdump will be printed (starting from line 28 of the C code).
+In simulacore.cu the executable file "simple"(MachO) and "simple-linux-elf"(Linux Elf) is opened and copyed to the memory. 
 
-From line 35 on the CUDA part is configured. The minimal number of threads are initialized (384 for the "GeForce GT 650M" on a "MacBook Pro (Retina, Mid 2012)". After this a memory section from the GPU device memory is allocated. Via cudaMemcpy the executable binary is transfered to this device memory. 
+From line 99 on the CUDA part is configured. The minimal number of threads are initialized (384 for the "GeForce GT 650M" on a "MacBook Pro (Retina, Mid 2012)". After this a memory section from the GPU device memory is allocated. Via cudaMemcpy the executable binaries are transfered to the device memory. 
 
 ### Run the i86 opcode interpreter kernel on the GPU
 
-At line 42 in simulacore.cu the GPU kernel is called via 
+At line 109 in simulacore.cu the GPU kernel is called via 
 ```
-simulacore_gpu<<<blocksPerGrid, threadsPerBlock>>>(d_binary);
+simulacore_gpu<<<blocksPerGrid, threadsPerBlock>>>(d_arch, d_binary, d_result);
 ```
-If it's successfully execution the memory will be transfered back to the host memory and the result will be printed to confirm the correct result. The GPU core should store the value at address 0x1004. The result should be 0x2a (42).
+If it's successfully execution the result will be transfered back to the host memory and the result will be printed to confirm the correct result. Correct lines should look like this:
 
-The interpreter itself is located on the simulacore_kernel.cu. The function simulacore_gpu gets a pointer of the device memory.
+```
+result for GPU core #97 (MachO format):	2a  
+result for GPU core #98 (MachO format):	2a  
+result for GPU core #99 (MachO format):	2a  
+result for GPU core #100 (MachO format):	2a  
+result for GPU core #101 (MachO format):	2a  
+result for GPU core #102 (MachO format):	2a
+...
+result for GPU core #136 (Linux ELF format):	2a  
+result for GPU core #137 (Linux ELF format):	2a  
+result for GPU core #138 (Linux ELF format):	2a  
+result for GPU core #139 (Linux ELF format):	2a  
+result for GPU core #140 (Linux ELF format):	2a
+```
+This means cores from number 97 to 99 interpreted the executable from the MachO file ("simple") and got the correct result 0x2a (42). The cores number 136 to 140 interpreted the executable from "simple-linux-elf" as Linux Elf format and interpreted it correct to the result 0x2a (42).
 
-At this sample only threads with id equal 3 are doing the opcode interpretation. Because the number of threads are identical to the number of cores of the given GPU device, only one thread should be accessing the memory. 
+The interpreter itself is located on the simulacore_kernel.cu. The function simulacore_gpu gets a pointer of the device memory for architecture configuration, executable memory and result array.
 
 To help to understand the if-conditions, the disassembly (from Hopper Disassembler for OSX) are listed as comments. The order of the if-statements is not the exact order of the opcode in the binary.  
 
@@ -81,8 +95,8 @@ Given the prerequisite, that it is possible to find a valid solution to call sta
 
 ## Next steps
 
-- run the same executable many times 
-- run the same C code compiled for different OS in parallel
+~~- run the same executable many times~~
+~~- run the same C code compiled for different OS in parallel~~
 - run the same C code compiled for different CPUs and OS in parallel
 - evaluate opcode interpretation of embedded systems like Arduino 
 - evaluate timing and sync behaviour
