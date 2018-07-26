@@ -47,9 +47,11 @@ Because of the return value of the main function you need to run the "simple" ex
 
 ### Reading the binaries from executables and transfer it to the GPU memory
 
+
 In simulacore.cu the executable file "simple"(MachO) and "simple-linux-elf"(Linux Elf) is opened and copyed to the memory. 
 
 From line 99 on the CUDA part is configured. The minimal number of threads are initialized (384 for the "GeForce GT 650M" on a "MacBook Pro (Retina, Mid 2012)". After this a memory section from the GPU device memory is allocated. Via cudaMemcpy the executable binaries are transfered to the device memory. 
+
 
 ### Run the i86 opcode interpreter kernel on the GPU
 
@@ -79,11 +81,13 @@ The interpreter itself is located on the simulacore_kernel.cu. The function simu
 
 To help to understand the if-conditions, the disassembly (from Hopper Disassembler for OSX) are listed as comments. The order of the if-statements is not the exact order of the opcode in the binary.  
 
-Even if CUDA - and in more general, GPUs - offer registers to it's cores, in this proof-of-concept the i86 registers are defined as variables. The defined C-variables are stored via MOV (0xc7) at the register variable rbp_8 and eax and the calculation happens at eax and ecx. The final result of the calculation can be found at eax. The value of eax will be written to the device memory via "targetMem[0x1004 >> 2] = eax;" at line 109 in file simulacore_kernel.cu.
+Even if CUDA - and in more general, GPUs - offer registers to it's cores, in this proof-of-concept the i86 registers are defined as variables. The defined C-variables are stored via MOV (0xc7) at the register variable rbp_8 and eax and the calculation happens at eax and ecx. The final result of the calculation can be found at eax. The value of eax will be written to the device memory via "resultMem[coreNum] = eax;" at line 107 in file simulacore_kernel.cu.
 
 ## Conclusion
 
 It is shown, that it is possible to interprete and run opcode from an Intel processor with a GPU. In the history of computer this is not the first time. The Digital FX!32 had done this on Digital Alpha Workstations in the 90the. More sophisticated than this PoC the software also made runtime analytics to optimize the performance on the flight (http://www.hpl.hp.com/hpjournal/dtj/vol9num1/vol9num1art1.pdf). 
+
+Additional it is shown, that the same executable opcode can be interpreted on many cores in parallel.
 
 With the ability to run the same code many times in parallel (up to 4000 cores on a NVIDIA 1080ti), this solution could be faster as the target processor even if the opcodes interpreted and a GPU usually runs on lower clock than a typical Intel CPU.
 
