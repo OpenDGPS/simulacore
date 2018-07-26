@@ -21,6 +21,10 @@ And if so, is it possible to run many of similar or even different programs in p
 
 GPUs like NVIDIAs Keppler are SIMD-processors. Every core at these GPUs get the same code and after the 'GO' every core starts to execute exactly the same code. In contrast, on a classic multicore CPU every core executes its own code. Both types of processing units have the same problem: how to access the data memory without to interference with the other cores, trying to access the same memory address. On GPUs this problem is easy to solve, mostly. When and if all the cores working on the same code it is predictable that every core needs the same amount of clock cycles. The memory accessable to one core can be calculated by its core number (or thread number). To transfer data from one core to another you can sync the cores and rotate the addresses. On multicore CPUs this is much harder, at least because the os kernel handel the threads and the clock cycles depends an the specific code running on each core. There is no sync between the cores except the OS-kernel managed this. On GPUs there are features like syncthreads to stop cores until they are aligned.
 
+In 2012 there was a question on a gaming forum about "Emulating CPU on a GPU" (https://www.mmo-champion.com/threads/1080576-Emulating-CPU-on-a-GPU), most responses getting it wrong and assumed, the original poster means to run the CPU code native.
+
+A more profound discussion a year later (https://gamedev.stackexchange.com/questions/98374/hundreds-or-even-thousands-of-slow-running-cpus-emulated-on-gpu) made some assumptions about performance. But the scope of the original question was to implement this emulation via GPU as the core component of a game.
+
 ## The very basic idea
 
 Executables are a set of bytes interpreted by the progamm loader of an operating system, and shaped for the CPU disgnated to execute this specific program. Either MachO (on macOS) or ELF (on Linux) or even DOS-programs compiled for a CPU contains opcode which is interpretable for the current porcessor. Arround this code there are areas which contains data, text, system call informations and so on. 
