@@ -6,16 +6,25 @@
 #include <helper_cuda.h>
 
 
-// 0x30E750
+
 __device__ int getGlobalIdx_1D_1D()
 {
 	return blockIdx.x *blockDim.x + threadIdx.x;
 }
 
-__device__ unsigned char getNextByte(uint8_t *targetMem, int longInt) {
-	return targetMem[longInt];
+__device__ int getDWReverse(int coreNum, int *arch, uint8_t *targetMem, int executableOffset) {
+	int returnValue = 0;
+	int varAddress = 0;
+	if (arch[coreNum] == MACHO_I86 ) 
+		varAddress = executableOffset + 0x1000; 
+	if (arch[coreNum] == LIELF_I86 ) 
+		varAddress = executableOffset + 0x1030; 
+	returnValue = targetMem[varAddress]; varAddress++;
+	returnValue = returnValue + (targetMem[varAddress] << 8); varAddress++;
+	returnValue = returnValue + (targetMem[varAddress] << 16); varAddress++;
+	returnValue = returnValue + (targetMem[varAddress] << 24); 
+	return returnValue;
 }
-
 __global__ void simulacore_gpu(int *arch, uint8_t *targetMem, int *resultMem) {
 	int coreNum = 0;
 	int executableOffset = 0;
@@ -27,7 +36,7 @@ __global__ void simulacore_gpu(int *arch, uint8_t *targetMem, int *resultMem) {
 	coreNum = getGlobalIdx_1D_1D();
 	if (coreNum < NUMOFCORES) {
 		// opcAddress = 0xf80; // MachO
-		if (arch[coreNum] == 0x01 ) {
+		if (arch[coreNum] == MACHO_I86 ) {
 			if (arch[coreNum] != arch[0] ) {
 				executableOffset = (NUM_OF_MACHO_CORES * BINARYSIZE_LIELF) + ((coreNum - NUM_OF_MACHO_CORES) * BINARYSIZE_LIELF);
 			} else {
@@ -35,7 +44,7 @@ __global__ void simulacore_gpu(int *arch, uint8_t *targetMem, int *resultMem) {
 			}
 			opcAddress = executableOffset + 0xf80;
 		}
-		if (arch[coreNum] == 0x02 ) {
+		if (arch[coreNum] == LIELF_I86 ) {
 			if (arch[coreNum] != arch[0] ) {
 				executableOffset = (NUM_OF_MACHO_CORES * BINARYSIZE_LIELF) + ((coreNum - NUM_OF_MACHO_CORES) * BINARYSIZE_LIELF);
 			} else {
@@ -44,7 +53,7 @@ __global__ void simulacore_gpu(int *arch, uint8_t *targetMem, int *resultMem) {
 			opcAddress = executableOffset + 0x4d6;
 		}
 		for ( int step = 0; step < 16; step++ ) {
-			command = getNextByte(targetMem,opcAddress); opcAddress++;
+			command = targetMem[opcAddress]; opcAddress++;
 			if ( command == 0x55 ) {
 				// push rbp # 55
 			}	
@@ -66,7 +75,6 @@ __global__ void simulacore_gpu(int *arch, uint8_t *targetMem, int *resultMem) {
 				}
 				if ( command == 0xf8 ) {
 					// mov        dword [rbp+var_8], 0x7	# C7 45 F8 02 00 00 00   
-					// resultMem[coreNum] = __byte_perm (targetMem[(opcAddress)],0,0x0123);
 					rbp_8 = (targetMem[opcAddress]); opcAddress++;
 					rbp_8 = rbp_8 + (targetMem[opcAddress] << 8); opcAddress++;
 					rbp_8 = rbp_8 + (targetMem[opcAddress] << 16); opcAddress++;
@@ -77,27 +85,12 @@ __global__ void simulacore_gpu(int *arch, uint8_t *targetMem, int *resultMem) {
 				command = targetMem[opcAddress]; opcAddress++;
 				if ( command == 0x05 ) {	
 					// mov        eax, dword [_a]	# 8B 05 68 00 00 00 
-					if (arch[coreNum] == 0x01 ) 
-						varAddress = executableOffset + 0x1000; // MachO
-					if (arch[coreNum] == 0x02 ) 
-						varAddress = executableOffset + 0x1030; // Linux ELF
-					eax = targetMem[varAddress]; varAddress++;
-					eax = eax + (targetMem[varAddress] << 8); varAddress++;
-					eax = eax + (targetMem[varAddress] << 16); varAddress++;
-					eax = eax + (targetMem[varAddress] << 24); 
-					// resultMem[coreNum] = eax;
+					eax = getDWReverse(coreNum, arch, targetMem, executableOffset);
 					opcAddress = opcAddress + 4;
 				}
 				if ( command == 0x0d ) {
 					// mov        ecx, dword [_a] # 8B 0D 5B 00 00 00 
-					if (arch[coreNum] == 0x01 ) 
-						varAddress = executableOffset + 0x1000; // MachO
-					if (arch[coreNum] == 0x02 ) 
-						varAddress = executableOffset + 0x1030; // Linux ELF
-					ecx = (targetMem[varAddress]); varAddress++;
-					ecx = ecx + (targetMem[varAddress] << 8); varAddress++;
-					ecx = ecx + (targetMem[varAddress] << 16); varAddress++;
-					ecx = ecx + (targetMem[varAddress] << 24); 
+					ecx = getDWReverse(coreNum, arch, targetMem, executableOffset);
 					opcAddress = opcAddress + 4;
 				}
 				if ( command == 0x55 ) {
