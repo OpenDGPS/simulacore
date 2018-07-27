@@ -1,6 +1,6 @@
 # Simulacore
 
-A multicore opcode interpreter and runtime environment in CUDA.
+A multicore opcode interpreter/emulator and runtime environment for GPUs.
 
 ## Run the example
 
