@@ -9,7 +9,11 @@
 #define NUM_OF_LIELF_CORES (NUMOFCORES - NUM_OF_MACHO_CORES)
 
 #define TOTALBINARYSIZE (BINARYSIZE_LIELF * NUMOFCORES)
+#define MACHO_I86 0x01
+#define LIELF_I86 0x02
+
 #include "simulacore_kernel.cu"
+
 
 int main(void) {
 	uint8_t *ptr_executable;
@@ -75,9 +79,9 @@ int main(void) {
 
 	for ( int i = 0; i < (NUMOFCORES); i++ ) {
 		if ( i < NUM_OF_MACHO_CORES )
-			ptr_arch[i] = 0x01; // MachO
+			ptr_arch[i] = MACHO_I86;
 		else
-			ptr_arch[i] = 0x02; // Linux
+			ptr_arch[i] = LIELF_I86;
 	}
 	for ( int i = 0; i < (NUMOFCORES); i++ ) {
 		ptr_result[i] = 0x44;
@@ -95,6 +99,10 @@ int main(void) {
 		printf("\n");
 	}
 	*/
+	// CUDA 
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
 
 	dim3 blocksPerGrid(1,1,1); //use only one block
 	dim3 threadsPerBlock(NUMOFCORES,1,1); //use N threads in the block myKernel<<<blocksPerGrid, threadsPerBlock>>>(result);
@@ -106,10 +114,16 @@ int main(void) {
     checkCudaErrors(cudaMalloc((int**)&d_result, NUMOFCORES * sizeof( int )));
     checkCudaErrors(cudaMemcpy(d_result, ptr_result, NUMOFCORES * sizeof( int ), cudaMemcpyHostToDevice));
  	// start the i86 opcode interpreter on the GPU   
+	cudaEventRecord(start);
     simulacore_gpu<<<blocksPerGrid, threadsPerBlock>>>(d_arch, d_binary, d_result);
+	cudaEventRecord(stop);
     
     // checkCudaErrors(cudaMemcpy(ptr_executableCopy, d_binary, (TOTALBINARYSIZE), cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaMemcpy(ptr_result, d_result, NUMOFCORES * sizeof( int ), cudaMemcpyDeviceToHost));
+
+	cudaEventSynchronize(stop);
+	float milliseconds = 0;
+	cudaEventElapsedTime(&milliseconds, start, stop);
 
 
 	for ( int i = 0; i < NUMOFCORES; i++ ) {
@@ -117,6 +131,7 @@ int main(void) {
 	}
 	printf("\n");
 
+	printf("used time in sec: %f\n", milliseconds / 1000);
 	
 	free(ptr_executableCopy);
 	return 0;
