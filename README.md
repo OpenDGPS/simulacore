@@ -63,7 +63,7 @@ At line 109 in simulacore.cu the GPU kernel is called via
 ```
 simulacore_gpu<<<blocksPerGrid, threadsPerBlock>>>(d_arch, d_binary, d_result);
 ```
-If it's successfully execution the result will be transfered back to the host memory and the result will be printed to confirm the correct result. Correct lines should look like this:
+If it's executed successfully the result will be transfered back to the host memory and the result will be printed out to confirm the correct result. Correct lines should look like this:
 
 ```
 result for GPU core #97 (MachO format):	2a  
@@ -108,7 +108,7 @@ Given the prerequisite, that it is possible to find a valid solution to call sta
 - run the same C code compiled for different CPUs and OS in parallel
 - evaluate opcode interpretation of embedded systems like Arduino 
 - evaluate timing and sync behaviour
-- run benchmarks
+~~- run benchmarks~~
 - optimize the interpreter code by using NVIDIA PTX instructions (espacially by using byte reversal)
 - generalize the interpreter code by abstracting the "X86 Opcode and Instruction Reference" XML repository
 - evaluate different ways to call system functions
