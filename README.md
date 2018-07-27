@@ -103,12 +103,12 @@ Given the prerequisite, that it is possible to find a valid solution to call sta
 
 ## Next steps
 
-~~- run the same executable many times ~~
-~~- run the same C code compiled for different OS in parallel~~
+- ~~run the same executable many times ~~
+- ~~run the same C code compiled for different OS in parallel~~
 - run the same C code compiled for different CPUs and OS in parallel
 - evaluate opcode interpretation of embedded systems like Arduino 
 - evaluate timing and sync behaviour
-~~- run benchmarks~~
+- ~~run benchmarks~~
 - optimize the interpreter code by using NVIDIA PTX instructions (espacially by using byte reversal)
 - generalize the interpreter code by abstracting the "X86 Opcode and Instruction Reference" XML repository
 - evaluate different ways to call system functions
