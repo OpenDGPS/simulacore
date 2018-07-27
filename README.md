@@ -103,7 +103,7 @@ Given the prerequisite, that it is possible to find a valid solution to call sta
 
 ## Next steps
 
-~~- run the same executable many times~~ 
+~~- run the same executable many times ~~
 ~~- run the same C code compiled for different OS in parallel~~
 - run the same C code compiled for different CPUs and OS in parallel
 - evaluate opcode interpretation of embedded systems like Arduino 
