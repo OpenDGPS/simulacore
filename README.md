@@ -27,7 +27,7 @@ A more profound discussion a year later (https://gamedev.stackexchange.com/quest
 
 ## The very basic idea
 
-Executables are a set of bytes interpreted by the progamm loader of an operating system, and shaped for the CPU disgnated to execute this specific program. Either MachO (on macOS) or ELF (on Linux) or even DOS-programs compiled for a CPU contains opcode which is interpretable for the current porcessor. Arround this code there are areas which contains data, text, system call informations and so on. 
+Executables are a set of bytes interpreted by the progamm loader of an operating system, and shaped for the CPU disgnated to execute this specific program. Either MachO (on macOS) or ELF (on Linux) or even DOS-programs compiled for a CPU contains opcode which is interpretable for the current processor. Arround this code there are areas which contains data, text, system call informations and so on. 
 
 Assume, an executable i86-binary for macOS is written to the GPU memory it should be possible to determine, which part is the data, the text and what is the opcode. To know this, it is necessary to know the executable format of the runtime environment of the compilation target. That part is easy.
 
@@ -87,6 +87,18 @@ To help to understand the if-conditions, the disassembly (from Hopper Disassembl
 
 Even if CUDA - and in more general, GPUs - offer registers to it's cores, in this proof-of-concept the i86 registers are defined as variables. The defined C-variables are stored via MOV (0xc7) at the register variable rbp_8 and eax and the calculation happens at eax and ecx. The final result of the calculation can be found at eax. The value of eax will be written to the device memory via "resultMem[coreNum] = eax;" at line 107 in file simulacore_kernel.cu.
 
+## Performance 
+
+A very first performance test showed that the native execution on a 2.6 GHz i7 is around 100 times faster than the opcode interpretation via a single GPU core on a NVIDIA GeForce GT 650M 1024 MB with 900 MHz clockspeed. Running all 384 cores in parallel means a theoretical performance boost by nearly factor four. But on the current stage, this is not the case for a real world problem. 
+
+On the original simple.c there is no space for a significant optimization. But on the CUDA side, there many vectors to bring more performance. First of all it would be helpful to order the if statements checking the current opcode by the possibility of accurance for a given ISA. Depends on the CPU type this could reserve up to 50% clockcycles. Second choice would be to use the registers of the GPU cores. Currently there are close to hundread accresses (read or write) to the device memory. At least half of it can be replaced by register operations. 
+
+Another source optimize the CUDA code could be to align the memory access to the typical MMU blocksize of 64k, at least for huge executables. 
+
+Clearly the greatest speed gain would be obtained if the if-statements were replaced by a PTX-LUT. This lookup-table needs to be nested for a given CISC processor. From one byte commands to commands with up to 15 bytes (see https://en.wikipedia.org/wiki/Instruction_set_architecture) this table could be huge. But for different CPUs many commands only differs in the opcode but not in the instructions itself. With the neccessary overhead for every command and flavors, it should be possible to come to a solution, which not need more than six additional commands to interpret all opcodes on avarage. Depends on the clockcycles needed by the CPU commands this means in some situations, that the interpreter needs only two times more clockcycles than the original command on the target CPU. 
+
+Without any further research at the moment it is not possible to say if an implementation of pipelining, branchprediction and cache mechanism make sense. Probably this techniques would add so many branches more, that the ratio between the clockcycles on the GPU to the clockcycles on the original CPU will go down and there is no more perfomance benefit.
+
 ## Conclusion
 
 It is shown, that it is possible to interprete and run opcode from an Intel processor with a GPU. In the history of computer this is not the first time. The Digital FX!32 had done this on Digital Alpha Workstations in the 90the. More sophisticated than this PoC the software also made runtime analytics to optimize the performance on the flight (http://www.hpl.hp.com/hpjournal/dtj/vol9num1/vol9num1art1.pdf). 
@@ -109,6 +121,7 @@ Given the prerequisite, that it is possible to find a valid solution to call sta
 - evaluate opcode interpretation of embedded systems like Arduino 
 - evaluate timing and sync behaviour
 - ~~run benchmarks~~
+- run more benchmarks
 - optimize the interpreter code by using NVIDIA PTX instructions (espacially by using byte reversal)
 - generalize the interpreter code by abstracting the "X86 Opcode and Instruction Reference" XML repository
 - evaluate different ways to call system functions
