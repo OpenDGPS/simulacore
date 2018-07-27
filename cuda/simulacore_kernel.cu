@@ -12,11 +12,11 @@ __device__ int getGlobalIdx_1D_1D()
 	return blockIdx.x *blockDim.x + threadIdx.x;
 }
 
-__device__ unsigned char getNextByte(int *targetMem, int longInt) {
-	return ((targetMem[longInt >> 2] & (0xff << ( 8 * (longInt % 4) ))) >> ( 8 * (longInt % 4) ));
+__device__ unsigned char getNextByte(uint8_t *targetMem, int longInt) {
+	return targetMem[longInt];
 }
 
-__global__ void simulacore_gpu(int *arch, int *targetMem, int *resultMem) {
+__global__ void simulacore_gpu(int *arch, uint8_t *targetMem, int *resultMem) {
 	int coreNum = 0;
 	int executableOffset = 0;
 	int opcAddress = 0;
@@ -55,35 +55,36 @@ __global__ void simulacore_gpu(int *arch, int *targetMem, int *resultMem) {
 				// mov        rbp, rsp	# 48 89 E5 
 			}
 			if ( command == 0xc7 ) {	
-				command = getNextByte(targetMem,opcAddress); opcAddress++;
-				command = getNextByte(targetMem,opcAddress); opcAddress++;
+				command = targetMem[opcAddress]; opcAddress++;
+				command = targetMem[opcAddress]; opcAddress++;
 				if ( command == 0xfc ) {
 					// mov        dword [rbp+var_4], 0x0	# C7 45 FC 00 00 00 00  
-					rbp_4 = (getNextByte(targetMem,opcAddress)); opcAddress++;
-					rbp_4 = rbp_4 + (getNextByte(targetMem,opcAddress) << 8); opcAddress++;
-					rbp_4 = rbp_4 + (getNextByte(targetMem,opcAddress) << 16); opcAddress++;
-					rbp_4 = rbp_4 + (getNextByte(targetMem,opcAddress) << 24); opcAddress++;
+					rbp_4 = targetMem[opcAddress]; opcAddress++;
+					rbp_4 = rbp_4 + (targetMem[opcAddress] << 8); opcAddress++;
+					rbp_4 = rbp_4 + (targetMem[opcAddress] << 16); opcAddress++;
+					rbp_4 = rbp_4 + (targetMem[opcAddress] << 24); opcAddress++;
 				}
 				if ( command == 0xf8 ) {
 					// mov        dword [rbp+var_8], 0x7	# C7 45 F8 02 00 00 00   
-					rbp_8 = (getNextByte(targetMem,opcAddress)); opcAddress++;
-					rbp_8 = rbp_8 + (getNextByte(targetMem,opcAddress) << 8); opcAddress++;
-					rbp_8 = rbp_8 + (getNextByte(targetMem,opcAddress) << 16); opcAddress++;
-					rbp_8 = rbp_8 + (getNextByte(targetMem,opcAddress) << 24); opcAddress++;
+					// resultMem[coreNum] = __byte_perm (targetMem[(opcAddress)],0,0x0123);
+					rbp_8 = (targetMem[opcAddress]); opcAddress++;
+					rbp_8 = rbp_8 + (targetMem[opcAddress] << 8); opcAddress++;
+					rbp_8 = rbp_8 + (targetMem[opcAddress] << 16); opcAddress++;
+					rbp_8 = rbp_8 + (targetMem[opcAddress] << 24); opcAddress++;
 				}
 			}
 			if ( command == 0x8B ) {	
-				command = getNextByte(targetMem,opcAddress); opcAddress++;
+				command = targetMem[opcAddress]; opcAddress++;
 				if ( command == 0x05 ) {	
 					// mov        eax, dword [_a]	# 8B 05 68 00 00 00 
 					if (arch[coreNum] == 0x01 ) 
 						varAddress = executableOffset + 0x1000; // MachO
 					if (arch[coreNum] == 0x02 ) 
 						varAddress = executableOffset + 0x1030; // Linux ELF
-					eax = (getNextByte(targetMem,varAddress)); varAddress++;
-					eax = eax + (getNextByte(targetMem,varAddress) << 8); varAddress++;
-					eax = eax + (getNextByte(targetMem,varAddress) << 16); varAddress++;
-					eax = eax + (getNextByte(targetMem,varAddress) << 24); 
+					eax = targetMem[varAddress]; varAddress++;
+					eax = eax + (targetMem[varAddress] << 8); varAddress++;
+					eax = eax + (targetMem[varAddress] << 16); varAddress++;
+					eax = eax + (targetMem[varAddress] << 24); 
 					// resultMem[coreNum] = eax;
 					opcAddress = opcAddress + 4;
 				}
@@ -93,10 +94,10 @@ __global__ void simulacore_gpu(int *arch, int *targetMem, int *resultMem) {
 						varAddress = executableOffset + 0x1000; // MachO
 					if (arch[coreNum] == 0x02 ) 
 						varAddress = executableOffset + 0x1030; // Linux ELF
-					ecx = (getNextByte(targetMem,varAddress)); varAddress++;
-					ecx = ecx + (getNextByte(targetMem,varAddress) << 8); varAddress++;
-					ecx = ecx + (getNextByte(targetMem,varAddress) << 16); varAddress++;
-					ecx = ecx + (getNextByte(targetMem,varAddress) << 24); 
+					ecx = (targetMem[varAddress]); varAddress++;
+					ecx = ecx + (targetMem[varAddress] << 8); varAddress++;
+					ecx = ecx + (targetMem[varAddress] << 16); varAddress++;
+					ecx = ecx + (targetMem[varAddress] << 24); 
 					opcAddress = opcAddress + 4;
 				}
 				if ( command == 0x55 ) {
@@ -112,10 +113,10 @@ __global__ void simulacore_gpu(int *arch, int *targetMem, int *resultMem) {
 			}
 			if ( command == 0x0f ) {	
 				opcAddress++;
-				command = getNextByte(targetMem,opcAddress); opcAddress++;
+				command = targetMem[opcAddress]; opcAddress++;
 				if ( command == 0x45 ) {
 					// imul       eax, dword [rbp+var_8]	# 0F AF 45 F8 
-					command = getNextByte(targetMem,opcAddress); opcAddress++;
+					command = targetMem[opcAddress]; opcAddress++;
 					if ( command == 0xf8 ) // OSX RBP address downwards from ff 
 						eax = eax * rbp_8;
 					if ( command == 0xfc ) // Linux ELF
@@ -131,16 +132,16 @@ __global__ void simulacore_gpu(int *arch, int *targetMem, int *resultMem) {
 				}
 			}
 			if ( command == 0x03 ) {
-				command = getNextByte(targetMem,opcAddress); opcAddress++;
+				command = targetMem[opcAddress]; opcAddress++;
 				if ( command == 0x45 ) {
 					// add        eax, dword [rbp+var_8]	# 03 45 F8  
 					eax = eax + rbp_8;
-					command = getNextByte(targetMem,opcAddress); opcAddress++;
+					command = targetMem[opcAddress]; opcAddress++;
 				}
 				if ( command == 0x4d ) {
 					// add        ecx, dword [rbp+var_8]	# 03 4D F8  
 					ecx = ecx + rbp_8;
-					command = getNextByte(targetMem,opcAddress); opcAddress++;
+					command = targetMem[opcAddress]; opcAddress++;
 				}
 			}
 			if ( command == 0x83 ) {
@@ -149,7 +150,7 @@ __global__ void simulacore_gpu(int *arch, int *targetMem, int *resultMem) {
 				opcAddress++; opcAddress++;
 			}
 			if ( command == 0x01 ) {
-				command = getNextByte(targetMem,opcAddress); opcAddress++;
+				command = targetMem[opcAddress]; opcAddress++;
 				if ( command == 0xd0 ) {
 					// add        eax, edx # 01 D0 
 					eax = eax + edx;
