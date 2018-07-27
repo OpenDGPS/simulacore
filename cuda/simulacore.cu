@@ -17,7 +17,7 @@ int main(void) {
 	int *ptr_arch;
 	int *ptr_result;
 	FILE *ptr_fp;
-    int *d_binary;
+    uint8_t *d_binary;
     int *d_arch;
     int *d_result;
 	ptr_executable = (uint8_t *)malloc(BINARYSIZE_LIELF);
@@ -99,7 +99,7 @@ int main(void) {
 	dim3 blocksPerGrid(1,1,1); //use only one block
 	dim3 threadsPerBlock(NUMOFCORES,1,1); //use N threads in the block myKernel<<<blocksPerGrid, threadsPerBlock>>>(result);
     
-    checkCudaErrors(cudaMalloc((int**)&d_binary, (TOTALBINARYSIZE)));
+    checkCudaErrors(cudaMalloc((uint8_t**)&d_binary, (TOTALBINARYSIZE)));
     checkCudaErrors(cudaMemcpy(d_binary, ptr_executableCopy, (TOTALBINARYSIZE), cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMalloc((int**)&d_arch, NUMOFCORES * sizeof( int )));
     checkCudaErrors(cudaMemcpy(d_arch, ptr_arch, NUMOFCORES * sizeof( int ), cudaMemcpyHostToDevice));
