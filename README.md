@@ -105,7 +105,7 @@ It is shown, that it is possible to interprete and run opcode from an Intel proc
 
 Additional it is shown, that the same executable opcode can be interpreted on many cores in parallel.
 
-With the ability to run the same code many times in parallel (up to 4000 cores on a NVIDIA 1080ti), this solution could be faster as the target processor even if the opcodes interpreted and a GPU usually runs on lower clock than a typical Intel CPU.
+With the ability to run the same code many times in parallel (more than 3500 cores on a NVIDIA 1080ti), this solution could be faster as the target processor even if the opcodes interpreted and a GPU usually runs on lower clock than a typical Intel CPU.
 
 Additionally the option to run different executable formats, independent from the host operating system offers new ways to build emulators of ancient computer systems like NEXTSTEP or RISC OS the legendary operating system from Acorn.
 
