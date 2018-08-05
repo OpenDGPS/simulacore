@@ -153,7 +153,7 @@ __global__ void simulacore_gpu(int *arch, uint8_t *targetMem, int *resultMem) {
 					edx = edx + ecx; 
 				}
 			}
-			resultMem[coreNum] = eax;
+			resultMem[coreNum] = eax; // result is stored in register eax and transfered to resultMem
 		}
 	}
 }
