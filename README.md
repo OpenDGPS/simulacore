@@ -27,7 +27,7 @@ A more profound discussion a year later (https://gamedev.stackexchange.com/quest
 
 ## The very basic idea
 
-Executables are a set of bytes interpreted by the progamm loader of an operating system, and shaped for the CPU disgnated to execute this specific program. Either MachO (on macOS) or ELF (on Linux) or even DOS-programs compiled for a CPU contains opcode which is interpretable for the current processor. Arround this code there are areas which contains data, text, system call informations and so on. 
+Executables are a set of bytes interpreted by the progamm loader of an operating system, and shaped for the CPU disgnated to execute this specific program. Either Mach-O (on macOS) or ELF (on Linux) or even DOS-programs compiled for a CPU contains opcode which is interpretable for the current processor. Arround this code there are areas which contains data, text, system call informations and so on. 
 
 Assume, an executable i86-binary for macOS is written to the GPU memory it should be possible to determine, which part is the data, the text and what is the opcode. To know this, it is necessary to know the executable format of the runtime environment of the compilation target. That part is easy.
 
@@ -41,7 +41,7 @@ Additionally to the information about the target processing code (ISA) and the o
 
 ![Disassembly of simple.c](/disassembly.png)
 
-The very basic MachO binary compiled from the "simple.c" via gcc (-O0 to prevent any optimizations) to "simple" is our starting point. It starts with the instructions at address 0xf80. First command is a push at register RBP. The opcode is 0x55. Next the RSP will be moved to RBP register. Then the registers RBP, EAX and ECX will be used for the calculation of the target value 42.
+The very basic Mach-O binary compiled from the "simple.c" via gcc (-O0 to prevent any optimizations) to "simple" is our starting point. It starts with the instructions at address 0xf80. First command is a push at register RBP. The opcode is 0x55. Next the RSP will be moved to RBP register. Then the registers RBP, EAX and ECX will be used for the calculation of the target value 42.
 
 It is helpful to know, that the opcodes are byte oriented even if the processor (i86_64) is a little endian CPU. The codes are not stored at 32 or 64 bit memory address in reverse order. Instead the CPU reads the codes byte by byte. So, if there is a unambiguous interpretable instruction for a byte, no further commands will be readed (except to fill the instruction pipeline). 
 
@@ -52,7 +52,7 @@ Because of the return value of the main function you need to run the "simple" ex
 ### Reading the binaries from executables and transfer it to the GPU memory
 
 
-In simulacore.cu the executable file "simple"(MachO) and "simple-linux-elf"(Linux Elf) is opened and copyed to the memory. 
+In simulacore.cu the executable file "simple"(Mach-O) and "simple-linux-elf"(Linux Elf) is opened and copyed to the memory. 
 
 From line 99 on the CUDA part is configured. The minimal number of threads are initialized (384 for the "GeForce GT 650M" on a "MacBook Pro (Retina, Mid 2012)". After this a memory section from the GPU device memory is allocated. Via cudaMemcpy the executable binaries are transfered to the device memory. 
 
@@ -66,12 +66,12 @@ simulacore_gpu<<<blocksPerGrid, threadsPerBlock>>>(d_arch, d_binary, d_result);
 If it's executed successfully the result will be transfered back to the host memory and the result will be printed out to confirm the correct result. Correct lines should look like this:
 
 ```
-result for GPU core #97 (MachO format):	2a  
-result for GPU core #98 (MachO format):	2a  
-result for GPU core #99 (MachO format):	2a  
-result for GPU core #100 (MachO format):	2a  
-result for GPU core #101 (MachO format):	2a  
-result for GPU core #102 (MachO format):	2a
+result for GPU core #97 (Mach-O format):	2a  
+result for GPU core #98 (Mach-O format):	2a  
+result for GPU core #99 (Mach-O format):	2a  
+result for GPU core #100 (Mach-O format):	2a  
+result for GPU core #101 (Mach-O format):	2a  
+result for GPU core #102 (Mach-O format):	2a
 ...
 result for GPU core #136 (Linux ELF format):	2a  
 result for GPU core #137 (Linux ELF format):	2a  
@@ -79,7 +79,7 @@ result for GPU core #138 (Linux ELF format):	2a
 result for GPU core #139 (Linux ELF format):	2a  
 result for GPU core #140 (Linux ELF format):	2a
 ```
-This means cores from number 97 to 99 interpreted the executable from the MachO file ("simple") and got the correct result 0x2a (42). The cores number 136 to 140 interpreted the executable from "simple-linux-elf" as Linux Elf format and interpreted it correct to the result 0x2a (42).
+This means cores from number 97 to 99 interpreted the executable from the Mach-O file ("simple") and got the correct result 0x2a (42). The cores number 136 to 140 interpreted the executable from "simple-linux-elf" as Linux Elf format and interpreted it correct to the result 0x2a (42).
 
 The interpreter itself is located on the simulacore_kernel.cu. The function simulacore_gpu gets a pointer of the device memory for architecture configuration, executable memory and result array.
 
