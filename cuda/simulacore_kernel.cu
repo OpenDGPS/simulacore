@@ -5,7 +5,9 @@
 #include <helper_functions.h>
 #include <helper_cuda.h>
 
-
+/* TODO:                                *
+ * Replace with dynamic linked PTX-JIT  *
+ * see: CUDA/samples/ptxjit             */
 
 __device__ int getGlobalIdx_1D_1D()
 {
