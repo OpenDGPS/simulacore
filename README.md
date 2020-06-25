@@ -124,7 +124,7 @@ Given the prerequisite, that it is possible to find a valid solution to call sta
 - run more benchmarks
 - optimize the interpreter code by using NVIDIA PTX instructions (espacially by using byte reversal)
 - generalize the interpreter code by abstracting the "X86 Opcode and Instruction Reference" XML repository (see [x86asm.net repository of opcodes](http://x86asm.net/index.html))
-- evaluate different ways to call system functions (…)
+- evaluate different ways to call system functions, one of the best way sound to be io_uring.
 
 ## Disclaimer
 
