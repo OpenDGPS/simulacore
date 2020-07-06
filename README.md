@@ -126,6 +126,10 @@ Given the prerequisite, that it is possible to find a valid solution to call sta
 - generalize the interpreter code by abstracting the "X86 Opcode and Instruction Reference" XML repository (see [x86asm.net repository of opcodes](http://x86asm.net/index.html))
 - evaluate different ways to call system functions, one of the best way sound to be io_uring.
 
+## References
+
+[PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#instruction-set)
+
 ## Disclaimer
 
 I am not affiliated with NVIDIA. I like CUDA and try to simulate complex systems with it. But I'm a catastrophic programmer and rarely stick to any code conventions.
