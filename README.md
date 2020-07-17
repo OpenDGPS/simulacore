@@ -29,7 +29,7 @@ A more profound discussion a year later (https://gamedev.stackexchange.com/quest
 
 Executables are a set of bytes interpreted by the progamm loader of an operating system, and shaped for the CPU disgnated to execute this specific program. Either Mach-O (on macOS) or ELF (on Linux) or even DOS-programs compiled for a CPU contains opcode which is interpretable for the current processor. Arround this code there are areas which contains data, text, system call informations and so on. 
 
-Assume, an executable i86-binary for macOS is written to the GPU memory it should be possible to determine, which part is the data, the text and what is the opcode. To know this, it is necessary to know the executable format of the runtime environment of the compilation target. That part is easy.
+Assume, an executable x86-binary for macOS is written to the GPU memory it should be possible to determine, which part is the data, the text and what is the opcode. To know this, it is necessary to know the executable format of the runtime environment of the compilation target. That part is easy.
 
 Next part to know is the processor architecture or ISA of the compilation target. This is the hard part. Even RISC processors are now not very "reduced". On CISC processors an instruction with all necessary informations can be between one and more than 10 bytes long. 
 
