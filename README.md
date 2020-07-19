@@ -43,7 +43,7 @@ Additionally to the information about the target processing code (ISA) and the o
 
 The very basic Mach-O binary compiled from the "simple.c" via gcc (-O0 to prevent any optimizations) to "simple" is our starting point. It starts with the instructions at address 0xf80. First command is a push at register RBP. The opcode is 0x55. Next the RSP will be moved to RBP register. Then the registers RBP, EAX and ECX will be used for the calculation of the target value 42.
 
-It is helpful to know, that the opcodes are byte oriented even if the processor (i86_64) is a little endian CPU. The codes are not stored at 32 or 64 bit memory address in reverse order. Instead the CPU reads the codes byte by byte. So, if there is a unambiguous interpretable instruction for a byte, no further commands will be readed (except to fill the instruction pipeline). 
+It is helpful to know, that the opcodes are byte oriented even if the processor (x86_64) is a little endian CPU. The codes are not stored at 32 or 64 bit memory address in reverse order. Instead the CPU reads the codes byte by byte. So, if there is a unambiguous interpretable instruction for a byte, no further commands will be readed (except to fill the instruction pipeline). 
 
 In the sample C code there is a global integer variable "a" and a integer variable "b" inside the main-function. The compiler stores "a" in the data section at the binary and "b" is hardcoded to use in the RBP-register. Because of the RBP register is 128 bit, "b" only use a part (starting from byte number 8) of the register.
 
@@ -57,7 +57,7 @@ In simulacore.cu the executable file "simple"(Mach-O) and "simple-linux-elf"(Lin
 From line 99 on the CUDA part is configured. The minimal number of threads are initialized (384 for the "GeForce GT 650M" on a "MacBook Pro (Retina, Mid 2012)". After this a memory section from the GPU device memory is allocated. Via cudaMemcpy the executable binaries are transfered to the device memory. 
 
 
-### Run the i86 opcode interpreter kernel on the GPU
+### Run the x86 opcode interpreter kernel on the GPU
 
 At line 109 in simulacore.cu the GPU kernel is called via 
 ```
@@ -85,7 +85,7 @@ The interpreter itself is located on the simulacore_kernel.cu. The function simu
 
 To help to understand the if-conditions, the disassembly (from Hopper Disassembler for OSX) are listed as comments. The order of the if-statements is not the exact order of the opcode in the binary.  
 
-Even if CUDA - and in more general, GPUs - offer registers to it's cores, in this proof-of-concept the i86 registers are defined as variables. The defined C-variables are stored via MOV (0xc7) at the register variable rbp_8 and eax and the calculation happens at eax and ecx. The final result of the calculation can be found at eax. The value of eax will be written to the device memory via "resultMem[coreNum] = eax;" at line 107 in file simulacore_kernel.cu.
+Even if CUDA - and in more general, GPUs - offer registers to it's cores, in this proof-of-concept the x86 registers are defined as variables. The defined C-variables are stored via MOV (0xc7) at the register variable rbp_8 and eax and the calculation happens at eax and ecx. The final result of the calculation can be found at eax. The value of eax will be written to the device memory via ´´´resultMem[coreNum] = eax;´´´ at line 107 in file simulacore_kernel.cu.
 
 ## Performance 
 
